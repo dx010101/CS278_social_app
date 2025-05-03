@@ -1,4 +1,3 @@
-
 import asyncio
 import json
 import websockets
@@ -76,7 +75,7 @@ async def send_loop(ws):
                 del room_members[room]
 
 
-
+                
         else:
             continue
         async with send_lock:

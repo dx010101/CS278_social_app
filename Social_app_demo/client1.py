@@ -56,6 +56,7 @@ async def send_loop(ws):
                 }
             }
 
+
         elif cmd.startswith("/leave"):
             _, room = cmd.split(" ", 1)
             if room not in room_members or PROFILE["user_id"] not in room_members[room]:
@@ -74,6 +75,7 @@ async def send_loop(ws):
                 del room_members[room]
 
 
+                
         else:
             continue
         async with send_lock:
