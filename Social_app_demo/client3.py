@@ -40,7 +40,7 @@ async def send_loop(ws):
                     "user_id": PROFILE["user_id"],
                     "request_text": text,
                     "max_km": max_km,
-                    "threshold": 0.6,
+                    "threshold": 0.1,
                     "max_group": max_group
                 }
             }
