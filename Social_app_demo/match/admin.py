@@ -111,27 +111,24 @@ class RoomMemberAdmin(admin.ModelAdmin):
 
 
 # Add custom admin views by extending AdminSite's get_urls
-# The original way was trying to use a non-existent 'register_view' method
-# Let's use the correct approach to add custom admin URLs
+admin_site = admin.site
 
-# Create a function to get custom admin URLs
-def get_admin_urls(urls):
-    # Add custom URL patterns
+# Store the original get_urls method
+original_get_urls = admin_site.get_urls
+
+def get_custom_urls():
+    # Call the original get_urls
+    urls = original_get_urls()
+    
+    # Add our custom URL pattern
     custom_urls = [
         path('match/user-dashboard/', 
-             admin.site.admin_view(admin_dashboard.user_dashboard.user_dashboard_view), 
+             admin_site.admin_view(admin_dashboard.user_dashboard.user_dashboard_view), 
              name='user-dashboard'),
     ]
     
     # Return the combined URL patterns
     return custom_urls + urls
 
-# Store the original get_urls method
-original_get_urls = admin.site.get_urls
-
-# Create a new get_urls method that adds our custom URLs
-def custom_get_urls():
-    return get_admin_urls(original_get_urls())
-
 # Replace the get_urls method with our custom version
-admin.site.get_urls = custom_get_urls
+admin_site.get_urls = get_custom_urls 

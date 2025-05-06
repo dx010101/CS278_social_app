@@ -1,0 +1,148 @@
+{% extends "match/base.html" %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+        <!-- Profile Header -->
+        <div class="bg-indigo-600 text-white p-6">
+            <h1 class="text-2xl font-bold">My Profile</h1>
+            <p class="text-indigo-100">Manage your personal information and location</p>
+        </div>
+
+        <!-- Notification Messages -->
+        {% if success_message %}
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4" role="alert">
+            <p>{{ success_message }}</p>
+        </div>
+        {% endif %}
+
+        {% if error_message %}
+        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+            <p>{{ error_message }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Profile Form -->
+        <form method="post" class="p-6">
+            {% csrf_token %}
+            
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Personal Information</h2>
+                
+                <!-- Name -->
+                <div class="mb-4">
+                    <label for="name" class="block text-gray-700 font-medium mb-2">Name</label>
+                    <input type="text" id="name" name="name" value="{{ user.name }}" required
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <!-- Hometown -->
+                <div class="mb-4">
+                    <label for="hometown" class="block text-gray-700 font-medium mb-2">Hometown</label>
+                    <input type="text" id="hometown" name="hometown" value="{{ user.hometown|default:'' }}"
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <!-- Major -->
+                <div class="mb-4">
+                    <label for="major" class="block text-gray-700 font-medium mb-2">Major/Field of Study</label>
+                    <input type="text" id="major" name="major" value="{{ user.major|default:'' }}"
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <!-- Interests -->
+                <div class="mb-4">
+                    <label for="interests" class="block text-gray-700 font-medium mb-2">Interests (comma-separated)</label>
+                    <input type="text" id="interests" name="interests" value="{{ user.interests|join:', ' }}"
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <p class="mt-1 text-sm text-gray-500">Example: hiking, reading, cooking, etc.</p>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Location</h2>
+                <p class="mb-4 text-gray-600">Set your current location using the map below or by entering coordinates.</p>
+                
+                <div class="flex flex-col md:flex-row gap-4">
+                    <!-- Latitude -->
+                    <div class="flex-1 mb-4">
+                        <label for="latitude" class="block text-gray-700 font-medium mb-2">Latitude</label>
+                        <input type="number" id="latitude" name="latitude" value="{{ user.latitude }}" step="0.000001" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+
+                    <!-- Longitude -->
+                    <div class="flex-1 mb-4">
+                        <label for="longitude" class="block text-gray-700 font-medium mb-2">Longitude</label>
+                        <input type="number" id="longitude" name="longitude" value="{{ user.longitude }}" step="0.000001" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <!-- Map will be inserted here -->
+                <div id="map" class="w-full h-64 border rounded-lg mb-4"></div>
+                <p class="text-sm text-gray-500">Click on the map to set your location, or drag the marker.</p>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mt-6">
+                <button type="submit" class="bg-indigo-600 text-white py-2 px-6 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    Save Profile
+                </button>
+                <a href="{% url 'match:nearby' %}" class="ml-4 inline-block text-indigo-600 hover:text-indigo-800">
+                    Find Nearby Users
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize map
+        const map = L.map('map').setView([{{ user.latitude }}, {{ user.longitude }}], 13);
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Add marker for user's current location
+        const marker = L.marker([{{ user.latitude }}, {{ user.longitude }}], {
+            draggable: true
+        }).addTo(map);
+        
+        // Update form fields when marker is moved
+        marker.on('dragend', function(e) {
+            const position = marker.getLatLng();
+            document.getElementById('latitude').value = position.lat.toFixed(6);
+            document.getElementById('longitude').value = position.lng.toFixed(6);
+        });
+        
+        // Update marker position when form fields change
+        document.getElementById('latitude').addEventListener('change', updateMarker);
+        document.getElementById('longitude').addEventListener('change', updateMarker);
+        
+        // Allow clicking on map to set location
+        map.on('click', function(e) {
+            marker.setLatLng(e.latlng);
+            document.getElementById('latitude').value = e.latlng.lat.toFixed(6);
+            document.getElementById('longitude').value = e.latlng.lng.toFixed(6);
+        });
+        
+        function updateMarker() {
+            const lat = parseFloat(document.getElementById('latitude').value);
+            const lng = parseFloat(document.getElementById('longitude').value);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                marker.setLatLng([lat, lng]);
+                map.panTo([lat, lng]);
+            }
+        }
+    });
+</script>
+{% endblock %} 

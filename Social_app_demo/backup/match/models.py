@@ -95,40 +95,4 @@ class User(models.Model):
         )
         
         # Filter by exact distance and order by proximity
-        return queryset.filter(distance__lte=max_distance_km).order_by('distance')
-
-
-class Room(models.Model):
-    """Model to store chat rooms"""
-    room_id = models.CharField(max_length=100, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_rooms')
-    request_text = models.TextField(blank=True, null=True)
-    active = models.BooleanField(default=True)
-    
-    def __str__(self):
-        return f"Room {self.room_id} by {self.creator.name}"
-    
-    @property
-    def members_count(self):
-        return self.members.count()
-    
-    @property
-    def member_list(self):
-        """Return a list of user_ids in this room"""
-        return list(self.members.values_list('user__user_id', flat=True))
-
-
-class RoomMember(models.Model):
-    """Model to store room membership"""
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='members')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rooms')
-    joined_at = models.DateTimeField(auto_now_add=True)
-    is_active = models.BooleanField(default=True)
-    
-    class Meta:
-        unique_together = ('room', 'user')
-        
-    def __str__(self):
-        return f"{self.user.name} in {self.room.room_id}"
+        return queryset.filter(distance__lte=max_distance_km).order_by('distance') 
