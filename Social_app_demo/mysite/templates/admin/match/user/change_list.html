@@ -1,0 +1,52 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+{{ block.super }}
+{% endblock %}
+
+{% block result_list %}
+<div class="admin-summary">
+    <div class="user-stats-card">
+        <h3>User Statistics</h3>
+        <p><strong>Total users:</strong> {{ total_users }}</p>
+    </div>
+    <div class="admin-help-card">
+        <h3>User Management Help</h3>
+        <ul>
+            <li>Use filters on the right to narrow down users</li>
+            <li>Search by name, user ID, or interests</li>
+            <li>Select users and use the action dropdown for batch operations</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+    .admin-summary {
+        display: flex;
+        margin-bottom: 20px;
+        gap: 20px;
+    }
+    .user-stats-card, .admin-help-card {
+        flex: 1;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .admin-help-card ul {
+        margin-left: 20px;
+        padding-left: 0;
+    }
+    @media (max-width: 768px) {
+        .admin-summary {
+            flex-direction: column;
+        }
+    }
+</style>
+{{ block.super }}
+{% endblock %}
+
+{% block pagination %}
+{{ block.super }}
+{% endblock %} 

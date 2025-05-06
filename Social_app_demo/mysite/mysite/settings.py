@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-
+import os
 
 
 INSTALLED_APPS = [
@@ -27,7 +27,7 @@ INSTALLED_APPS = [
     "match",
 ]
 
-# tell Django to use Channels’ ASGI application
+# tell Django to use Channels' ASGI application
 ASGI_APPLICATION = "mysite.asgi.application"
 
 # In-memory channel layer (for demo)
@@ -38,7 +38,6 @@ CHANNEL_LAYERS = {
 }
 
 # your OpenAI key
-import os
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -134,8 +133,19 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Extra static files directories
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Login URL for @login_required decorator
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'match:profile'
+LOGOUT_REDIRECT_URL = 'login'

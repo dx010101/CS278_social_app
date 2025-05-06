@@ -1,0 +1,68 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+{{ block.super }}
+<li>
+    <a href="https://www.google.com/maps?q={{ original.latitude }},{{ original.longitude }}" class="viewsitelink" target="_blank">
+        View on Map
+    </a>
+</li>
+{% endblock %}
+
+{% block after_field_sets %}
+{{ block.super }}
+{% if original %}
+<div class="location-preview">
+    <h2>User Location Preview</h2>
+    <div class="map-placeholder">
+        <p>Location coordinates: {{ original.latitude }}, {{ original.longitude }}</p>
+        <p>Click "View on Map" above to see the exact location.</p>
+    </div>
+    
+    {% if original.interests %}
+    <div class="interests-section">
+        <h3>Interests</h3>
+        <div class="interest-tags">
+            {% for interest in original.interests %}
+            <span class="interest-tag">{{ interest }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .location-preview {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .map-placeholder {
+        background-color: #eee;
+        padding: 20px;
+        border-radius: 5px;
+        margin-top: 10px;
+        text-align: center;
+    }
+    .interests-section {
+        margin-top: 20px;
+    }
+    .interest-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
+    .interest-tag {
+        padding: 6px 12px;
+        background-color: #e6f7ff;
+        border: 1px solid #91d5ff;
+        border-radius: 16px;
+        font-size: 0.9em;
+    }
+</style>
+{% endif %}
+{% endblock %} 
