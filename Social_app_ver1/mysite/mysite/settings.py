@@ -27,7 +27,7 @@ INSTALLED_APPS = [
     "match",
 ]
 
-# tell Django to use Channels’ ASGI application
+# tell Django to use Channels' ASGI application
 ASGI_APPLICATION = "mysite.asgi.application"
 
 # In-memory channel layer (for demo)
@@ -73,7 +73,7 @@ ROOT_URLCONF = "mysite.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "match" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

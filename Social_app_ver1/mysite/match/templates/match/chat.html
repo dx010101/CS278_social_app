@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App - Chat Room</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(120deg, #a1c4fd, #c2e9fb, #fbc2eb, #fcb69f);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            font-family: 'Inter', 'Nunito', Arial, sans-serif;
+        }
+        @keyframes gradientBG {
+            0% {background-position: 0% 50%;}
+            50% {background-position: 100% 50%;}
+            100% {background-position: 0% 50%;}
+        }
+        .chat-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            max-width: 1400px;
+            margin: 2rem auto;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            background: rgba(255,255,255,0.97);
+        }
+        .users-list {
+            width: 270px;
+            background: #f1f5f9cc;
+            border-right: 1px solid #e2e8f0;
+            padding: 1.5rem 1rem;
+            overflow-y: auto;
+        }
+        .right-panel {
+            width: 320px;
+            background: #f1f5f9cc;
+            border-left: 1px solid #e2e8f0;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        .right-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .right-tab-btn {
+            background: none;
+            border: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #6366f1;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .right-tab-btn.active {
+            background: #6366f1;
+            color: #fff;
+        }
+        .right-tab-content {
+            display: none;
+        }
+        .right-tab-content.active {
+            display: block;
+        }
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(120deg, #f8fafc 60%, #e0e7ff 100%);
+        }
+        .chat-header {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f1f5f9;
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 2rem 2rem 1rem 2rem;
+            overflow-y: auto;
+            background: transparent;
+        }
+        .message {
+            margin-bottom: 1.2rem;
+            padding: 0.7rem 1.2rem;
+            border-radius: 18px;
+            max-width: 70%;
+            font-size: 1.08rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: background 0.2s;
+        }
+        .message.sent {
+            background: linear-gradient(90deg, #6366f1 60%, #818cf8 100%);
+            color: white;
+            margin-left: auto;
+        }
+        .message.received {
+            background: #f1f5f9;
+            color: #22223b;
+            margin-right: auto;
+        }
+        .chat-input {
+            padding: 1rem 2rem;
+            background: #f1f5f9;
+            border-top: 1px solid #e2e8f0;
+            position: sticky;
+            bottom: 0;
+        }
+        .user-item, .group-item {
+            padding: 0.6rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            transition: background 0.2s, color 0.2s, transform 0.3s;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.7s forwards;
+        }
+        .user-item.active, .group-item.active {
+            background: #6366f1;
+            color: white;
+        }
+        .user-avatar, .group-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #c7d2fe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .broadcast-form {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #e0e7ff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(99,102,241,0.07);
+        }
+        .invite-alert {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Chat App</a>
+            <div class="d-flex">
+                <span class="navbar-text me-3">
+                    Welcome, {{ request.user.username }}
+                </span>
+                <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="chat-container">
+        <div class="users-list">
+            <h5 class="mb-3">Online Users</h5>
+            <div id="users-list">
+                <!-- Users will be populated here -->
+            </div>
+            <hr>
+            <div class="groups-list mt-4">
+                <h6>Your Groups</h6>
+                <ul id="groups-list" class="list-group mb-3">
+                    <!-- Groups will be populated here -->
+                </ul>
+            </div>
+            <div class="broadcast-form">
+                <h6 class="mb-3">Find People</h6>
+                <form id="broadcast-form">
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="request-text" placeholder="What are you looking for?">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Max Distance (km)</label>
+                        <input type="number" class="form-control" id="max-km" value="5.0" min="0.1" step="0.1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Match Threshold (0-1)</label>
+                        <input type="number" class="form-control" id="threshold" value="0.5" min="0" max="1" step="0.1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Max Group Size</label>
+                        <input type="number" class="form-control" id="max-group" value="5" min="1">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Find Matches</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="chat-main">
+            <div class="chat-header" id="chat-header">general_announcement</div>
+            <div class="chat-messages" id="chat-messages">
+                <!-- Messages will be populated here -->
+            </div>
+            <div class="chat-input">
+                <form id="chat-form" class="d-flex">
+                    <input type="text" id="message-input" class="form-control me-2" placeholder="Type your message...">
+                    <button type="submit" class="btn btn-primary">Send</button>
+                </form>
+            </div>
+        </div>
+        <div class="right-panel">
+            <div class="right-tabs">
+                <button class="right-tab-btn active" id="tab-group-info">Group Info</button>
+                <button class="right-tab-btn" id="tab-ai-tips">AI Tips</button>
+            </div>
+            <div class="right-tab-content active" id="group-info-content">
+                <h6 id="group-info-title">Group: general_announcement</h6>
+                <ul id="group-members-list" class="list-group mb-3"></ul>
+                <div id="group-desc">This is a public group for all users and bots. Share your thoughts!</div>
+            </div>
+            <div class="right-tab-content" id="ai-tips-content">
+                <h6>AI Tips</h6>
+                <ul>
+                    <li>Try using keywords like "tennis" or "music" to find people with similar interests.</li>
+                    <li>Be friendly and respectful in your messages!</li>
+                    <li>Use the "Find People" form to discover new groups.</li>
+                    <li>Click on a group to switch chats.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GENERAL_GROUP = 'general_announcement';
+        const FAKE_GROUPS = ['music_lovers', 'sports_fans', 'book_club'];
+        const FAKE_USERS = [
+            { username: 'alice', avatar: 'A' },
+            { username: 'bob', avatar: 'B' },
+            { username: 'charlie', avatar: 'C' }
+        ];
+        let selectedGroup = GENERAL_GROUP;
+        let userGroups = [GENERAL_GROUP, ...FAKE_GROUPS];
+        let groupMembers = {
+            general_announcement: ['alice', 'bob', 'charlie', '{{ request.user.username }}'],
+            music_lovers: ['alice', '{{ request.user.username }}'],
+            sports_fans: ['bob', '{{ request.user.username }}'],
+            book_club: ['charlie', '{{ request.user.username }}']
+        };
+
+        // Tab switching logic
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('tab-group-info').onclick = function() {
+                document.getElementById('tab-group-info').classList.add('active');
+                document.getElementById('tab-ai-tips').classList.remove('active');
+                document.getElementById('group-info-content').classList.add('active');
+                document.getElementById('ai-tips-content').classList.remove('active');
+            };
+            document.getElementById('tab-ai-tips').onclick = function() {
+                document.getElementById('tab-ai-tips').classList.add('active');
+                document.getElementById('tab-group-info').classList.remove('active');
+                document.getElementById('ai-tips-content').classList.add('active');
+                document.getElementById('group-info-content').classList.remove('active');
+            };
+            updateGroupInfo(selectedGroup);
+        });
+
+        const chatSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/chat/'
+        );
+
+        function updateUsersList(users) {
+            const usersList = document.getElementById('users-list');
+            usersList.innerHTML = '';
+            // Animate fake users
+            FAKE_USERS.forEach((u, i) => {
+                const userDiv = document.createElement('div');
+                userDiv.className = 'user-item';
+                userDiv.style.animationDelay = `${i * 0.15}s`;
+                userDiv.innerHTML = `<span class="user-avatar">${u.avatar}</span> ${u.username}`;
+                usersList.appendChild(userDiv);
+            });
+            // Animate real users
+            users.forEach((username, i) => {
+                if (username !== '{{ request.user.username }}' && !FAKE_USERS.some(u => u.username === username)) {
+                    const userDiv = document.createElement('div');
+                    userDiv.className = 'user-item';
+                    userDiv.style.animationDelay = `${(i + FAKE_USERS.length) * 0.15}s`;
+                    userDiv.innerHTML = `<span class="user-avatar">${username[0].toUpperCase()}</span> ${username}`;
+                    usersList.appendChild(userDiv);
+                }
+            });
+        }
+
+        function updateGroupsList(groups) {
+            // Always include general_announcement and fake groups
+            FAKE_GROUPS.forEach(g => { if (!groups.includes(g)) groups.push(g); });
+            if (!groups.includes(GENERAL_GROUP)) {
+                groups.unshift(GENERAL_GROUP);
+            }
+            userGroups = groups;
+            const groupsList = document.getElementById('groups-list');
+            groupsList.innerHTML = '';
+            groups.forEach((room, i) => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center group-item';
+                li.style.animationDelay = `${i * 0.12}s`;
+                li.innerHTML = `<span class="group-avatar">${room[0].toUpperCase()}</span> <span>${room}</span>`;
+                if (room === selectedGroup) {
+                    li.classList.add('active');
+                }
+                li.onclick = function() {
+                    selectedGroup = room;
+                    updateGroupsList(userGroups);
+                    document.getElementById('chat-header').textContent = room;
+                    document.getElementById('chat-messages').innerHTML = '';
+                    updateGroupInfo(room);
+                };
+                if (room !== GENERAL_GROUP && !FAKE_GROUPS.includes(room)) {
+                    const leaveBtn = document.createElement('button');
+                    leaveBtn.className = 'btn btn-sm btn-danger ms-2';
+                    leaveBtn.textContent = 'Leave';
+                    leaveBtn.onclick = function(e) {
+                        e.stopPropagation();
+                        chatSocket.send(JSON.stringify({
+                            action: 'leave',
+                            data: { room: room, user_id: '{{ request.user.username }}' }
+                        }));
+                    };
+                    li.appendChild(leaveBtn);
+                }
+                groupsList.appendChild(li);
+            });
+        }
+
+        function updateGroupInfo(room) {
+            document.getElementById('group-info-title').textContent = `Group: ${room}`;
+            const membersList = document.getElementById('group-members-list');
+            membersList.innerHTML = '';
+            (groupMembers[room] || ['{{ request.user.username }}']).forEach((member, i) => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.style.animationDelay = `${i * 0.1}s`;
+                li.innerHTML = `<span class="user-avatar">${member[0].toUpperCase()}</span> ${member}`;
+                membersList.appendChild(li);
+            });
+            document.getElementById('group-desc').textContent =
+                room === GENERAL_GROUP ? 'This is a public group for all users and bots. Share your thoughts!' :
+                room === 'music_lovers' ? 'A group for music enthusiasts.' :
+                room === 'sports_fans' ? 'Discuss your favorite sports and teams.' :
+                room === 'book_club' ? 'Share and discuss your favorite books.' :
+                'A private group.';
+        }
+
+        function showInvite(from, text, score) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-info invite-alert';
+            alertDiv.innerHTML = `
+                <strong>${from}</strong> wants to chat!<br>
+                ${text}<br>
+                Match score: ${(score * 100).toFixed(0)}%
+                <button class="btn btn-sm btn-primary ms-2">Accept</button>
+                <button class="btn btn-sm btn-secondary ms-2">Decline</button>
+            `;
+            document.body.appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 30000);
+        }
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            switch(data.type || data.action) {
+                case 'user_list':
+                    updateUsersList(data.users);
+                    break;
+                case 'sent':
+                case 'received':
+                    if (data.room === selectedGroup || !data.room) {
+                        const messagesDiv = document.getElementById('chat-messages');
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = `message ${data.type}`;
+                        messageDiv.textContent = data.message;
+                        messagesDiv.appendChild(messageDiv);
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    }
+                    break;
+                case 'invite':
+                    showInvite(data.from, data.request_text, data.score);
+                    break;
+                case 'matches':
+                    const matches = data.matches;
+                    if (matches.length > 0) {
+                        const messagesDiv = document.getElementById('chat-messages');
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'message received';
+                        messageDiv.textContent = `Found ${matches.length} matches!`;
+                        messagesDiv.appendChild(messageDiv);
+                    }
+                    break;
+                case 'group_update':
+                    if (data.members && data.room) {
+                        groupMembers[data.room] = data.members;
+                        if (data.members.includes('{{ request.user.username }}')) {
+                            if (!userGroups.includes(data.room)) {
+                                userGroups.push(data.room);
+                                updateGroupsList(userGroups);
+                            }
+                        } else {
+                            userGroups = userGroups.filter(r => r !== data.room);
+                            updateGroupsList(userGroups);
+                            if (selectedGroup === data.room) {
+                                selectedGroup = GENERAL_GROUP;
+                                updateGroupsList(userGroups);
+                                document.getElementById('chat-header').textContent = GENERAL_GROUP;
+                                document.getElementById('chat-messages').innerHTML = '';
+                                updateGroupInfo(GENERAL_GROUP);
+                            }
+                        }
+                        updateGroupInfo(data.room);
+                    }
+                    break;
+                case 'left_group':
+                    userGroups = userGroups.filter(r => r !== data.room);
+                    updateGroupsList(userGroups);
+                    if (selectedGroup === data.room) {
+                        selectedGroup = GENERAL_GROUP;
+                        updateGroupsList(userGroups);
+                        document.getElementById('chat-header').textContent = GENERAL_GROUP;
+                        document.getElementById('chat-messages').innerHTML = '';
+                        updateGroupInfo(GENERAL_GROUP);
+                    }
+                    break;
+                case 'chat':
+                    if (data.room === selectedGroup) {
+                        const messagesDiv = document.getElementById('chat-messages');
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'message received';
+                        messageDiv.textContent = `${data.sender}: ${data.message}`;
+                        messagesDiv.appendChild(messageDiv);
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    }
+                    break;
+            }
+        };
+
+        document.querySelector('#chat-form').onsubmit = function(e) {
+            e.preventDefault();
+            const messageInput = document.querySelector('#message-input');
+            const message = messageInput.value;
+            if (message) {
+                chatSocket.send(JSON.stringify({
+                    action: 'chat',
+                    data: {
+                        room: selectedGroup,
+                        sender: '{{ request.user.username }}',
+                        message: message
+                    }
+                }));
+                messageInput.value = '';
+            }
+        };
+
+        document.querySelector('#broadcast-form').onsubmit = function(e) {
+            e.preventDefault();
+            const requestText = document.querySelector('#request-text').value;
+            const maxKm = parseFloat(document.querySelector('#max-km').value);
+            const threshold = parseFloat(document.querySelector('#threshold').value);
+            const maxGroup = parseInt(document.querySelector('#max-group').value);
+            if (requestText) {
+                chatSocket.send(JSON.stringify({
+                    'action': 'broadcast',
+                    'request_text': requestText,
+                    'max_km': maxKm,
+                    'threshold': threshold,
+                    'max_group': maxGroup
+                }));
+            }
+        };
+    </script>
+</body>
+</html>
