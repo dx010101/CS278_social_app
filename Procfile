@@ -1,1 +1,1 @@
-web: gunicorn mysite.wsgi 
+web: gunicorn tangent.mysite.wsgi 
