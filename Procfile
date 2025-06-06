@@ -1,1 +1,1 @@
-web: gunicorn tangent.mysite.wsgi 
+web: daphne mysite.mysite.asgi:application 
